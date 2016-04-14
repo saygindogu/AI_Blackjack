@@ -45,8 +45,23 @@ public class State {
     public double hit( int n){
         return 0;
     }
+    
+    public double getHitWinProb(){
+    	return 0;
+    }
+    
+    public double getStandWinProb(){
+    	return 0;
+    }
+    
+    public double getWinProb(){
+    	double hit   = getHitWinProb();
+    	double stand = getStandWinProb();
+    	
+    	return hit + stand;
+    }
 
-    public double stand( int n) {
+    public double stand() {
         return 0;
     }
 
