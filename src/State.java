@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-
 /**
  * Created by saygin on 4/13/2016.
  */
@@ -63,12 +61,6 @@ public class State {
 
     public double stand() {
         return 0;
-    }
-
-    public boolean hit(){
-        double probHit = hit( 0); //TODO
-        double probStand = stand(0);
-        return probHit > probStand;
     }
 
     public double getWantedPercentage(int score) {

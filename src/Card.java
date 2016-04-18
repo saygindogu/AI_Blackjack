@@ -3,47 +3,54 @@
  */
 public class Card {
 
-    public enum Symbol{
+    public enum Symbol {
         Spades(0),
         Hearts(1),
         Diamonds(2),
         Clubs(3);
 
         private int symbol;
-        Symbol( int val){
+
+        Symbol(int val) {
             symbol = val;
         }
 
-        public int getSymbol(){
+        public int getSymbol() {
             return symbol;
         }
     }
+
     int value;
 
-    public Card( Symbol face, int faceValue){
+    public Card(Symbol face, int faceValue) {
         value = face.getSymbol() * 13 + faceValue;
     }
 
-    public Card( int val){
+    public Card(int val) {
         value = val;
     }
 
-    public Symbol getSymbol(){
+    public Symbol getSymbol() {
         int face = value / 13;
-        switch ( face){
-            case 0: return Symbol.Spades;
-            case 1: return Symbol.Hearts;
-            case 2: return Symbol.Diamonds;
-            case 3: return Symbol.Clubs;
-            default: return Symbol.Hearts; // Kalpleri severiz.
+        switch (face) {
+            case 0:
+                return Symbol.Spades;
+            case 1:
+                return Symbol.Hearts;
+            case 2:
+                return Symbol.Diamonds;
+            case 3:
+                return Symbol.Clubs;
+            default:
+                return Symbol.Hearts; // Kalpleri severiz.
         }
     }
 
-    public int getFaceValue(){
-        return (value % 13)+1;
+    public int getFaceValue() {
+        return (value % 13) + 1;
     }
 
-    // TODO bunu ikili kartlý olacak þekilde oyun içinde kullan. ( As için) Hand'e yaz
+    // TODO bunu ikili kartl? olacak ?ekilde oyun i?inde kullan. ( As i?in) Hand'e yaz
 //    public int getScore(){
 //        int faceValue = value % 13;
 //        if( faceValue > 10 ){
