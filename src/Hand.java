@@ -10,6 +10,10 @@ public class Hand {
         cardsAtHand = new ArrayList<>();
     }
 
+    public Hand(ArrayList<Card> cardsAtHand){
+        this.cardsAtHand = cardsAtHand;
+    }
+
     public int getScore(){
         int score = 0;
         int aceCount = 0;

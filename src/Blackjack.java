@@ -2,6 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
 
 /**
  * Created by saygin on 4/4/2016.
@@ -91,36 +94,46 @@ public class Blackjack {
                 //TODO give an advice wihle pretending you dont have acces to card 0
                 boolean hit = true;
                 State state = new State();
-                state.generateState( Blackjack.getInstance().userHand, Blackjack.getInstance().dealerHand);
-                int score = Blackjack.getInstance().userHand.getScore();
-                if( handHasAce(  Blackjack.getInstance().userHand) ){
-                    if( score > 18){
-                        hit = false;
-                    }
-                    else{
-                        if( state.getWantedPercentage( score) > 30.27){
-                            hit = true;
-                        }
-                        else {
-                            hit = false;
-                        }
-                    }
-                }
-                else{
-                    if( state.getWantedPercentage( score) > 30.27){
-                        hit = true;
-                    }
-                    else {
-                        hit = false;
-                    }
-                }
+                ArrayList<Card> seenDealerCards = new ArrayList<Card>();
+                seenDealerCards.add(Blackjack.getInstance().dealerHand.getCards().get(1));
+                Hand seenDealerHand = new Hand(seenDealerCards);
+                state.generateState( Blackjack.getInstance().userHand, seenDealerHand);
+                double hitProb, stand;
+                hitProb = state.getHitWinProb();
+                stand = state.getStandWinProb();
+                String advice = hitProb >= stand ? "HIT" : "STAND";
+                NumberFormat formatter = new DecimalFormat("#0.00");
+                adviceLabel.setText( "Hit:" + formatter.format( hitProb) + " Stand:" + formatter.format(stand) + " so we advice you to "  + advice);
 
-                if( hit){
-                    adviceLabel.setText( "HIT!");
-                }
-                else{
-                    adviceLabel.setText( "STAND!");
-                }
+                // int score = Blackjack.getInstance().userHand.getScore();
+//                if( handHasAce(  Blackjack.getInstance().userHand) ){
+//                    if( score > 18){
+//                        hit = false;
+//                    }
+//                    else{
+//                        if( state.getWantedPercentage( score) > 30.27){
+//                            hit = true;
+//                        }
+//                        else {
+//                            hit = false;
+//                        }
+//                    }
+//                }
+//                else{
+//                    if( state.getWantedPercentage( score) > 30.27){
+//                        hit = true;
+//                    }
+//                    else {
+//                        hit = false;
+//                    }
+//                }
+//
+//                if( hit){
+//                    adviceLabel.setText( "HIT!");
+//                }
+//                else{
+//                    adviceLabel.setText( "STAND!");
+//                }
             }
         });
 
