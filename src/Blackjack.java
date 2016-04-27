@@ -135,28 +135,28 @@ public class Blackjack {
                     }
                     progressBar.setValue( i);
                     //Test Algorithm
-                    State state = new State();
-                    ArrayList<Card> seenDealerCards = new ArrayList<Card>();
-                    seenDealerCards.add(Blackjack.getInstance().dealerHand.getCards().get(1));
-                    Hand seenDealerHand = new Hand(seenDealerCards);
-                    state.generateState( Blackjack.getInstance().userHand, seenDealerHand, Blackjack.getInstance().deck);
-                    double hitProb, stand1;
-                    hitProb = state.getHitWinProb();
-                    stand1 = state.getStandWinProb();
-                    if ( hitProb > stand1){
-                        bj.hit( bj.getUserHand(), true);
-                    }
-                    else{
-                        bj.stand( true);
-                    }
+//                    State state = new State();
+//                    ArrayList<Card> seenDealerCards = new ArrayList<Card>();
+//                    seenDealerCards.add(Blackjack.getInstance().dealerHand.getCards().get(1));
+//                    Hand seenDealerHand = new Hand(seenDealerCards);
+//                    state.generateState( Blackjack.getInstance().userHand, seenDealerHand, Blackjack.getInstance().deck);
+//                    double hitProb, stand1;
+//                    hitProb = state.getHitWinProb();
+//                    stand1 = state.getStandWinProb();
+//                    if ( hitProb > stand1){
+//                        bj.hit( bj.getUserHand(), true);
+//                    }
+//                    else{
+//                        bj.stand( true);
+//                    }
                     //Until Here algorithm
 //                    Test 17 rule
-//                            if(bj.userHand.getScore() <= 16){
-//                                bj.hit( bj.getUserHand(), true);
-//                            }
-//                            else{
-//                                bj.stand( true);
-//                            }
+                            if(bj.userHand.getScore() <= 16){
+                                bj.hit( bj.getUserHand(), true);
+                            }
+                            else{
+                                bj.stand( true);
+                            }
 //                    until here 17 rule
                     bj.newGame();
                 }
