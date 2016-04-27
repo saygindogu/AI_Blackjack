@@ -17,8 +17,11 @@ public class Blackjack {
     private boolean isUsersTurn;
     private GamePanel gamePanel;
     private boolean gameIsEnded;
+    private int analysisScore;
+    private static Thread thread;
 
     private Blackjack(){
+        analysisScore = 0;
         deck = new Deck();
         deck.shuffle();
         userHand = new Hand();
@@ -42,6 +45,13 @@ public class Blackjack {
         JButton hit = new JButton( "HIT");
         JButton stand = new JButton( "STAND");
         JButton advice = new JButton( "ADVICE");
+        JButton analyze = new JButton( "ANALYZE");
+        JButton stop = new JButton( "STOP ANALYSIS");
+
+        JTextField tf = new JTextField( "100");
+
+        JProgressBar progressBar = new JProgressBar();
+        progressBar.setVisible(false);
 
         JLabel adviceLabel = new JLabel( "");
 
@@ -49,8 +59,12 @@ public class Blackjack {
         buttonPanel.add(hit);
         buttonPanel.add(stand);
         buttonPanel.add(advice);
+        buttonPanel.add( tf);
+        buttonPanel.add( analyze);
+        buttonPanel.add(stop);
 
-        advicePanel.add( adviceLabel);
+        advicePanel.add(adviceLabel);
+        advicePanel.add(progressBar);
         frame.setLayout(new BorderLayout());
         frame.add(buttonPanel, BorderLayout.SOUTH);
         frame.add(advicePanel, BorderLayout.NORTH);
@@ -59,81 +73,110 @@ public class Blackjack {
         bj.setGamePanel(gp);
         frame.add(gp, BorderLayout.CENTER);
 
-        hit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (bj.isUsersTurn) {
-                    bj.hit(bj.getUserHand());
-                    adviceLabel.setText("");
-                    gp.repaint();
+        hit.addActionListener(e -> {
+            if (bj.isUsersTurn) {
+                bj.hit(bj.getUserHand(), false);
+                adviceLabel.setText("");
+                gp.repaint();
+            }
+        });
+
+        stand.addActionListener(e -> {
+            bj.stand(false);
+            adviceLabel.setText("");
+            gp.repaint();
+        });
+
+        newGame.addActionListener(e -> {
+            bj.newGame();
+            adviceLabel.setText("");
+            gp.repaint();
+        });
+
+        advice.addActionListener(e -> {
+            //TODO give an advice wihle pretending you dont have acces to card 0
+            boolean hit1 = true;
+            State state = new State();
+            ArrayList<Card> seenDealerCards = new ArrayList<Card>();
+            seenDealerCards.add(Blackjack.getInstance().dealerHand.getCards().get(1));
+            Hand seenDealerHand = new Hand(seenDealerCards);
+            state.generateState( Blackjack.getInstance().userHand, seenDealerHand);
+            double hitProb, stand1;
+            hitProb = state.getHitWinProb();
+            stand1 = state.getStandWinProb();
+            String advice1 = hitProb >= stand1 ? "HIT" : "STAND";
+            NumberFormat formatter = new DecimalFormat("#0.00");
+            adviceLabel.setText("Hit:" + formatter.format(hitProb) + " Stand:" + formatter.format(stand1) + " so we advice you to " + advice1);
+        });
+
+        analyze.addActionListener(e -> {
+            thread = new Thread(() -> {
+                int count = 0;
+                try {
+                    count = Integer.parseInt(tf.getText());
                 }
-            }
+                catch ( NumberFormatException nfe){
+                    adviceLabel.setText( "Invalid Input as number");
+                    return;
+                }
+                newGame.setEnabled( false);
+                hit.setEnabled( false);
+                stand.setEnabled( false);
+                advice.setEnabled( false);
+                analyze.setEnabled( false);
+                bj.analysisScore = 0;
+                progressBar.setMinimum( 0);
+                progressBar.setMaximum(count);
+                progressBar.setVisible( true);
+                for (int i = 0; i < count; i++) {
+                    if( thread.isInterrupted() ){
+                        count = i;
+                        break;
+                    }
+                    progressBar.setValue( i);
+                    //Test Algorithm
+                    State state = new State();
+                    ArrayList<Card> seenDealerCards = new ArrayList<Card>();
+                    seenDealerCards.add(Blackjack.getInstance().dealerHand.getCards().get(1));
+                    Hand seenDealerHand = new Hand(seenDealerCards);
+                    state.generateState( Blackjack.getInstance().userHand, seenDealerHand);
+                    double hitProb, stand1;
+                    hitProb = state.getHitWinProb();
+                    stand1 = state.getStandWinProb();
+                    if ( hitProb > stand1){
+                        bj.hit( bj.getUserHand(), true);
+                    }
+                    else{
+                        bj.stand( true);
+                    }
+                    //Until Here algorithm
+                    //Test 17 rule
+//                            if(bj.userHand.getScore() <= 16){
+//                                bj.hit( bj.getUserHand(), true);
+//                            }
+//                            else{
+//                                bj.stand( true);
+//                            }
+                    //until here 17 rule
+                    bj.newGame();
+                }
+                double overallScore = (double) bj.analysisScore / count;
+                adviceLabel.setText( "Analysis Score:" + overallScore);
+                progressBar.setVisible( false);
+                newGame.setEnabled( true);
+                hit.setEnabled( true);
+                stand.setEnabled( true);
+                advice.setEnabled(true);
+                analyze.setEnabled(true);
+            });
+            thread.start();
+            adviceLabel.setText("Analysis Thread is running:");
         });
 
-        stand.addActionListener(new ActionListener() {
+        stop.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                bj.stand();
-                adviceLabel.setText( "");
-                gp.repaint();
-            }
-        });
-
-        newGame.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                bj.newGame();
-                adviceLabel.setText( "");
-                gp.repaint();
-            }
-        });
-
-        advice.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                //TODO give an advice wihle pretending you dont have acces to card 0
-                boolean hit = true;
-                State state = new State();
-                ArrayList<Card> seenDealerCards = new ArrayList<Card>();
-                seenDealerCards.add(Blackjack.getInstance().dealerHand.getCards().get(1));
-                Hand seenDealerHand = new Hand(seenDealerCards);
-                state.generateState( Blackjack.getInstance().userHand, seenDealerHand);
-                double hitProb, stand;
-                hitProb = state.getHitWinProb();
-                stand = state.getStandWinProb();
-                String advice = hitProb >= stand ? "HIT" : "STAND";
-                NumberFormat formatter = new DecimalFormat("#0.00");
-                adviceLabel.setText( "Hit:" + formatter.format( hitProb) + " Stand:" + formatter.format(stand) + " so we advice you to "  + advice);
-
-                // int score = Blackjack.getInstance().userHand.getScore();
-//                if( handHasAce(  Blackjack.getInstance().userHand) ){
-//                    if( score > 18){
-//                        hit = false;
-//                    }
-//                    else{
-//                        if( state.getWantedPercentage( score) > 30.27){
-//                            hit = true;
-//                        }
-//                        else {
-//                            hit = false;
-//                        }
-//                    }
-//                }
-//                else{
-//                    if( state.getWantedPercentage( score) > 30.27){
-//                        hit = true;
-//                    }
-//                    else {
-//                        hit = false;
-//                    }
-//                }
-//
-//                if( hit){
-//                    adviceLabel.setText( "HIT!");
-//                }
-//                else{
-//                    adviceLabel.setText( "STAND!");
-//                }
+                thread.interrupt();
             }
         });
 
@@ -142,13 +185,6 @@ public class Blackjack {
 
     }
 
-    private static boolean handHasAce(Hand hand) {
-        boolean retVal = false;
-        for (int i = 0; i < hand.getCards().size(); i++) {
-            retVal|= hand.getCards().get(i).getFaceValue() == 1;
-        }
-        return retVal;
-    }
 
     private static Blackjack getInstance() {
 
@@ -171,67 +207,77 @@ public class Blackjack {
         gameIsEnded = false;
     }
 
-    private void stand() {
+    private void stand( boolean analysis) {
         isUsersTurn = false;
-        dealerTurn();
+        dealerTurn( analysis);
     }
 
-    private void dealerTurn() {
+    private void dealerTurn( boolean analysis) {
         if ( dealerHand.getScore() > 17 ) {
-            endGame();
+            endGame( analysis);
         }
         else{
-            hit( dealerHand);
+            hit(dealerHand, analysis);
             if( !gameIsEnded) {
-                dealerTurn();
+                dealerTurn( analysis);
             }
         }
     }
 
 
-    private void hit(Hand hand) {
+    private void hit(Hand hand, boolean analysis) {
         hand.addCardToHand( deck.pop());
         if( hand.getScore() > 21){
-            endGame();
+            endGame( analysis);
         }
     }
 
-    private void endGame(){
+    private void endGame( boolean analysis){
         gameIsEnded = true;
         isUsersTurn = false;
         int dealerScore = dealerHand.getScore();
         int userScore = userHand.getScore();
-        if( userScore > 21 ){
-            gamePanel.repaint();
-            final JOptionPane pane = new JOptionPane("User Busted");
-            final JDialog d = pane.createDialog( null, "Game is finished");
-            d.setLocation(300,200);
-            d.setVisible(true);
-            //JOptionPane.showMessageDialog( null, "User Busted", "Game is finished", JOptionPane.INFORMATION_MESSAGE);
+        if( analysis){
+            if (userScore > 21) {
+                analysisScore += 0;
+            } else if (dealerScore > 21) {
+                analysisScore++;
+            } else if (userScore > dealerScore) {
+                analysisScore++;
+            } else {
+                analysisScore += 0;
+            }
         }
-        else if( dealerScore > 21){
-            gamePanel.repaint();
-            final JOptionPane pane = new JOptionPane("Dealer Busted");
-            final JDialog d = pane.createDialog( null, "Game is finished");
-            d.setLocation(300,200);
-            d.setVisible(true);
-            //JOptionPane.showMessageDialog( null, "Dealer Busted", "Game is finished", JOptionPane.INFORMATION_MESSAGE);
-        }
-        else if( userScore > dealerScore){
-            gamePanel.repaint();
-            final JOptionPane pane = new JOptionPane("User Wins");
-            final JDialog d = pane.createDialog( null, "Game is finished");
-            d.setLocation(300,200);
-            d.setVisible(true);
-            //JOptionPane.showMessageDialog( null, "User Wins", "Game is finished", JOptionPane.INFORMATION_MESSAGE);
-        }
-        else{
-            gamePanel.repaint();
-            final JOptionPane pane = new JOptionPane("Dealer Wins");
-            final JDialog d = pane.createDialog( null, "Game is finished");
-            d.setLocation(300,200);
-            d.setVisible(true);
-            //JOptionPane.showMessageDialog( null, "Dealer Wins", "Game is finished", JOptionPane.INFORMATION_MESSAGE);
+        else {
+            if (userScore > 21) {
+                gamePanel.repaint();
+                final JOptionPane pane = new JOptionPane("User Busted");
+                final JDialog d = pane.createDialog(null, "Game is finished");
+                d.setLocation(300, 200);
+                d.setVisible(true);
+                //JOptionPane.showMessageDialog( null, "User Busted", "Game is finished", JOptionPane.INFORMATION_MESSAGE);
+            } else if (dealerScore > 21) {
+                gamePanel.repaint();
+                final JOptionPane pane = new JOptionPane("Dealer Busted");
+                final JDialog d = pane.createDialog(null, "Game is finished");
+                d.setLocation(300, 200);
+                d.setVisible(true);
+                //JOptionPane.showMessageDialog( null, "Dealer Busted", "Game is finished", JOptionPane.INFORMATION_MESSAGE);
+            } else if (userScore > dealerScore) {
+                gamePanel.repaint();
+                final JOptionPane pane = new JOptionPane("User Wins");
+                final JDialog d = pane.createDialog(null, "Game is finished");
+                d.setLocation(300, 200);
+                d.setVisible(true);
+                //JOptionPane.showMessageDialog( null, "User Wins", "Game is finished", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                gamePanel.repaint();
+                final JOptionPane pane = new JOptionPane("Dealer Wins");
+                final JDialog d = pane.createDialog(null, "Game is finished");
+                d.setLocation(300, 200);
+                d.setVisible(true);
+                //JOptionPane.showMessageDialog( null, "Dealer Wins", "Game is finished", JOptionPane.INFORMATION_MESSAGE);
+            }
         }
 
     }
