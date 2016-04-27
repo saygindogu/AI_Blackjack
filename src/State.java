@@ -15,7 +15,7 @@ public class State {
         array = new int[10];
     }
 
-    public void generateState(Hand userHand, Hand dealerHand) {
+    public void generateState(Hand userHand, Hand dealerHand, Deck deck) {
         this.userHand = userHand;
         this.dealerHand = dealerHand;
         for (int i = 0; i < 10; i++) {
@@ -38,7 +38,14 @@ public class State {
             } else {
                 array[face - 1]--;
             }
-
+        }
+        for (int i = 0; i < deck.openCards.size(); i++) {
+            int face = deck.openCards.get(i).getFaceValue();
+            if (face >= 10) {
+                array[9]--;
+            } else {
+                array[face - 1]--;
+            }
         }
     }
 
@@ -65,11 +72,11 @@ public class State {
             int userScore = newHand.getScore();
             if (userScore < 21) {
                 State s = new State();
-                s.generateState(newHand, dealerHand);
+                s.generateState(newHand, dealerHand, Blackjack.getInstance().deck);
                 prob += s.getWinProb() * getProbability(i + 1);
             } else if (userScore == 21) {
                 State s = new State();
-                s.generateState(newHand, dealerHand);
+                s.generateState(newHand, dealerHand, Blackjack.getInstance().deck);
                 double cardProb = getProbability(i + 1);
                 double winProb = s.getStandWinProb();
                 prob +=  winProb*cardProb;
@@ -88,7 +95,7 @@ public class State {
         double hit = getHitWinProb();
         double stand = getStandWinProb();
 
-        return hit + stand;
+        return hit > stand ? hit : stand;
     }
 
     public double getWinProbofDealer() {
@@ -103,7 +110,7 @@ public class State {
             int newDealerScore = newDealerHand.getScore();
             if (newDealerScore < 17) {
                 State s = new State();
-                s.generateState(userHand, newDealerHand);
+                s.generateState(userHand, newDealerHand, Blackjack.getInstance().deck);
                 prob += s.getWinProbofDealer() * getProbability(i + 1);
             } else if (17 <= newDealerScore && newDealerScore <= 21) {
                 if (newDealerScore >= userScore) {

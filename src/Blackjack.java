@@ -13,7 +13,7 @@ public class Blackjack {
     private static Blackjack instance = null;
     private Hand userHand;
     private Hand dealerHand;
-    private Deck deck;
+    public Deck deck;
     private boolean isUsersTurn;
     private GamePanel gamePanel;
     private boolean gameIsEnded;
@@ -100,7 +100,7 @@ public class Blackjack {
             ArrayList<Card> seenDealerCards = new ArrayList<Card>();
             seenDealerCards.add(Blackjack.getInstance().dealerHand.getCards().get(1));
             Hand seenDealerHand = new Hand(seenDealerCards);
-            state.generateState( Blackjack.getInstance().userHand, seenDealerHand);
+            state.generateState( Blackjack.getInstance().userHand, seenDealerHand, Blackjack.getInstance().deck);
             double hitProb, stand1;
             hitProb = state.getHitWinProb();
             stand1 = state.getStandWinProb();
@@ -139,7 +139,7 @@ public class Blackjack {
                     ArrayList<Card> seenDealerCards = new ArrayList<Card>();
                     seenDealerCards.add(Blackjack.getInstance().dealerHand.getCards().get(1));
                     Hand seenDealerHand = new Hand(seenDealerCards);
-                    state.generateState( Blackjack.getInstance().userHand, seenDealerHand);
+                    state.generateState( Blackjack.getInstance().userHand, seenDealerHand, Blackjack.getInstance().deck);
                     double hitProb, stand1;
                     hitProb = state.getHitWinProb();
                     stand1 = state.getStandWinProb();
@@ -150,14 +150,14 @@ public class Blackjack {
                         bj.stand( true);
                     }
                     //Until Here algorithm
-                    //Test 17 rule
+//                    Test 17 rule
 //                            if(bj.userHand.getScore() <= 16){
 //                                bj.hit( bj.getUserHand(), true);
 //                            }
 //                            else{
 //                                bj.stand( true);
 //                            }
-                    //until here 17 rule
+//                    until here 17 rule
                     bj.newGame();
                 }
                 double overallScore = (double) bj.analysisScore / count;
@@ -186,7 +186,7 @@ public class Blackjack {
     }
 
 
-    private static Blackjack getInstance() {
+    public static Blackjack getInstance() {
 
         if( instance == null){
             instance = new Blackjack();
@@ -195,8 +195,10 @@ public class Blackjack {
     }
 
     private void newGame() {
-        deck = new Deck();
-        deck.shuffle();
+        if( deck.size()  < 10) {
+            deck = new Deck();
+            deck.shuffle();
+        }
         userHand = new Hand();
         dealerHand = new Hand();
         userHand.addCardToHand(deck.pop());
@@ -213,7 +215,7 @@ public class Blackjack {
     }
 
     private void dealerTurn( boolean analysis) {
-        if ( dealerHand.getScore() > 17 ) {
+        if ( dealerHand.getScore() >= 17 ) {
             endGame( analysis);
         }
         else{
@@ -279,6 +281,8 @@ public class Blackjack {
                 //JOptionPane.showMessageDialog( null, "Dealer Wins", "Game is finished", JOptionPane.INFORMATION_MESSAGE);
             }
         }
+        deck.removeTable( userHand);
+        deck.removeTable( dealerHand);
 
     }
 
